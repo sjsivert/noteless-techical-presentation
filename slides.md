@@ -47,41 +47,153 @@ The last comment block of each slide will be treated as slide notes. It will be 
 transition: fade-out
 ---
 
-# What is Slidev?
+# Small Scale Architecture (1,500-5,000 users)
 
-Slidev is a slides maker and presenter designed for developers, consist of the following features
 
-- 📝 **Text-based** - focus on the content with Markdown, and then style them later
-- 🎨 **Themable** - themes can be shared and re-used as npm packages
-- 🧑‍💻 **Developer Friendly** - code highlighting, live coding with autocompletion
-- 🤹 **Interactive** - embed Vue components to enhance your expressions
-- 🎥 **Recording** - built-in recording and camera view
-- 📤 **Portable** - export to PDF, PPTX, PNGs, or even a hostable SPA
-- 🛠 **Hackable** - virtually anything that's possible on a webpage is possible in Slidev
-<br>
-<br>
+```mermaid
+flowchart TB
+    Client["React/TypeScript Frontend"]
+    API["Django REST Framework API"]
+    AuthBackend["Custom Django Auth Backends"]
+    UserApp["Django User & Profile App"]
+    NoteApp["Django Notes App"]
+    DB[(PostgreSQL Database)]
+    Signicat["Signicat"]
+    Redis[(Redis Cache)]
 
-Read more about [Why Slidev?](https://sli.dev/guide/why)
+    Client <--> API
+    API <--> AuthBackend
+    API <--> UserApp
+    API <--> NoteApp
+    AuthBackend <--> Signicat
+    UserApp <--> DB
+    NoteApp <--> DB
+    API <--> Redis
+
+    subgraph "Django Project"
+        API
+        AuthBackend
+        UserApp
+        NoteApp
+    end
+
+    subgraph "User Models"
+        UserModel["Django User Model"]
+        ProfileModel["Profile Model\n- profession\n- country"]
+        ProfessionModel["Profession Model\n- terminology\n- AI models"]
+        CountryModel["Country Model\n- regulations\n- auth methods"]
+
+        UserModel --- ProfileModel
+        ProfileModel --- ProfessionModel
+        ProfileModel --- CountryModel
+    end
+```
 
 <!--
-You can have `style` tag in markdown to override the style for the current page.
-Learn more: https://sli.dev/features/slide-scope-style
+For mindre brukerbaser er en monolitisk Django-applikasjon effektiv og håndterbar:  
+**Nøkkelfunksjoner:**
+
+- **Integrated Django Application**: All funksjonalitet er samlet i ett enkelt Django-prosjekt  
+- **Custom Authentication Backends**: Djangos autentiseringssystem er utvidet for å støtte Signicat og andre metoder  
+- **Flexible Data Models**: Brukerprofiler inkluderer feltene yrke og land for å støtte segmentering  
+- **Redis Caching**: Forbedrer ytelsen for ofte etterspurte data  
+- **Single Database**: All data lagres i én PostgreSQL-database med korrekt indeksering  
+
+**Fordeler:**
+
+- **Simplicity**: Enklere å utvikle, deploye og vedlikeholde  
+- **Developer Productivity**: Djangos admin-grensesnitt og ORM gir rask utvikling  
+- **Low Operational Overhead**: Kun én applikasjon å overvåke og skalere  
+- **Future-Proofing**: Modellene er designet for å kunne håndtere fremtidig vekst  
+
+**Implementasjonsnotater:**
+
+- Bruk Djangos **custom authentication backends** for å integrere med Signicat  
+- Implementer en fleksibel `Profile`-modell med foreign keys til `Profession`- og `Country`-modeller  
+- Bruk Django **signals** for å oppdatere relatert data når profiler endres  
+- Utnytt Djangos **permission system** for tilgangskontroll basert på yrke
 -->
 
-<style>
-h1 {
-  background-color: #2B90B6;
-  background-image: linear-gradient(45deg, #4EC5D4 10%, #146b8c 20%);
-  background-size: 100%;
-  -webkit-background-clip: text;
-  -moz-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -moz-text-fill-color: transparent;
-}
-</style>
+---
+transition: fade-out
+---
 
+# Medium Scale Architecture (1,500-5,000 users)
+
+```mermaid
+flowchart TB
+    Client["React/TypeScript Frontend"]
+    APIGateway["API Gateway / Load Balancer"]
+    AuthService["Authentication Service"]
+    DjangoAPI["Django REST Framework API"]
+    UserApp["Django User App"]
+    NoteApp["Django Notes App"]
+    DomainService["Professional Domain Service"]
+    MainDB[(PostgreSQL Main DB)]
+    AuthDB[(Auth Database)]
+    DomainDB[(Domain-Specific DB)]
+    Signicat["Signicat"]
+    Redis[(Redis Cache)]
+    
+    Client <--> APIGateway
+    APIGateway <--> AuthService
+    APIGateway <--> DjangoAPI
+    AuthService <--> Signicat
+    AuthService <--> AuthDB
+    AuthService <--> UserApp
+    DjangoAPI <--> UserApp
+    DjangoAPI <--> NoteApp
+    UserApp <--> MainDB
+    NoteApp <--> MainDB
+    DjangoAPI <--> DomainService
+    DomainService <--> DomainDB
+    DjangoAPI <--> Redis
+    
+    subgraph "Core Django System"
+        DjangoAPI
+        UserApp
+        NoteApp
+    end
+    
+    subgraph "External Services"
+        AuthService
+        DomainService
+    end
+    
+    subgraph "Domain-Specific Logic"
+        GPLogic["GP-Specific Logic"]
+        PhysioLogic["Physiotherapy Logic"]
+        PsychLogic["Psychology Logic"]
+        
+        DomainService --- GPLogic
+        DomainService --- PhysioLogic
+        DomainService --- PsychLogic
+    end
+
+```
 <!--
-Here is another comment.
+Etter hvert som brukerbasen vokser, begynner en hybrid tilnærming å trekke ut kritiske tjenester:  
+**Nøkkelfunksjoner:**
+
+- **API Gateway**: Ruter forespørsler til riktige tjenester  
+- **Separate Authentication Service**: Håndterer kompleksiteten med flere autentiseringsmetoder  
+- **Core Django Application**: Håndterer fortsatt brukerprofiler og hovedlogikken i applikasjonen  
+- **Domain-Specific Service**: Trekker ut yrkesspesifikk logikk i en egen tjeneste  
+- **Multiple Databases**: Skiller autentiseringsdata fra hoveddataene i applikasjonen  
+
+**Fordeler:**
+
+- **Improved Scalability**: Autentisering og domenespesifikk logikk kan skaleres uavhengig  
+- **Better Separation of Concerns**: Kompleksitet rundt autentisering isoleres fra hovedapplikasjonen  
+- **Flexible Growth**: Tjenestene kan utvikles i ulikt tempo  
+- **Incremental Migration**: Funksjonalitet kan gradvis flyttes fra Django til separate tjenester  
+
+**Implementasjonsnotater:**
+
+- **Authentication service** utsteder JWT-er som Django validerer  
+- **Domain service** håndterer yrkesspesifikke termer og arbeidsflyt  
+- Django håndterer fortsatt kjerneprofiler, men koordinerer med eksterne tjenester  
+- Databasetilkoblinger er optimalisert for ulike tilgangsmønstre
 -->
 
 ---
@@ -89,31 +201,187 @@ transition: slide-up
 level: 2
 ---
 
-# Navigation
+# Large Scale Architecture (15,000+ users)
 
-Hover on the bottom-left corner to see the navigation's controls panel, [learn more](https://sli.dev/guide/ui#navigation-bar)
 
-## Keyboard Shortcuts
+```mermaid
+flowchart TB
+    Client["React/TypeScript Frontend"]
+    APIGateway["API Gateway"]
+    AuthService["Authentication Service"]
+    UserService["User Management Service"]
+    NoteService["Notes Service"]
+    AIService["AI Transcription Service"]
+    DomainServices["Professional Domain Services"]
+    AuthDB[(Auth Database)]
+    UserDB[(User Database)]
+    NoteDB[(Notes Database)]
+    Signicat["Signicat"]
+    Redis[(Redis Cache)]
+    MessageQueue[(Kafka/RabbitMQ)]
+    
+    Client <--> APIGateway
+    APIGateway <--> AuthService
+    APIGateway <--> UserService
+    APIGateway <--> NoteService
+    APIGateway <--> AIService
+    APIGateway <--> DomainServices
+    
+    AuthService <--> Signicat
+    AuthService <--> AuthDB
+    UserService <--> UserDB
+    NoteService <--> NoteDB
+    
+    AuthService <--> MessageQueue
+    UserService <--> MessageQueue
+    NoteService <--> MessageQueue
+    AIService <--> MessageQueue
+    DomainServices <--> MessageQueue
+    
+    subgraph "Microservices"
+        AuthService
+        UserService
+        NoteService
+        AIService
+        DomainServices
+    end
+    
+    subgraph "Profession-Specific Services"
+        GPService["GP Service"]
+        PhysioService["Physiotherapy Service"]
+        PsychService["Psychology Service"]
+        
+        DomainServices --- GPService
+        DomainServices --- PhysioService
+        DomainServices --- PsychService
+    end
+    
+    subgraph "Regional Deployment"
+        EUCluster["EU Data Center"]
+        NordicCluster["Nordic Data Center"]
+        UKCluster["UK Data Center"]
+    end
 
-|                                                     |                             |
-| --------------------------------------------------- | --------------------------- |
-| <kbd>right</kbd> / <kbd>space</kbd>                 | next animation or slide     |
-| <kbd>left</kbd>  / <kbd>shift</kbd><kbd>space</kbd> | previous animation or slide |
-| <kbd>up</kbd>                                       | previous slide              |
-| <kbd>down</kbd>                                     | next slide                  |
+```
 
-<!-- https://sli.dev/guide/animations.html#click-animation -->
-<img
-  v-click
-  class="absolute -bottom-9 -left-7 w-80 opacity-50"
-  src="https://sli.dev/assets/arrow-bottom-left.svg"
-  alt=""
-/>
-<p v-after class="absolute bottom-23 left-45 opacity-30 transform -rotate-10">Here!</p>
+<!-- 
+
+For storskala operasjoner på tvers av flere land er en full microservice-arkitektur passende:
+Nøkkelfunksjoner:
+
+Complete Microservice Architecture: Hver hovedfunksjon er sin egen tjeneste
+
+Dedicated User Management Service: Håndterer alle aspekter av brukerprofiler og segmentering
+
+Message Queue Integration: Tjenester kommuniserer asynkront for bedre robusthet
+
+Regional Deployment: Tjenester kan deployes i ulike regioner for å møte krav til etterlevelse
+
+Profession-Specific Services: Hver medisinsk profesjon har dedikert forretningslogikk
+
+Fordeler:
+
+Maximum Scalability: Hver tjeneste kan skaleres uavhengig basert på behov
+
+Geographic Distribution: Tjenester kan deployes nær brukere i ulike regioner
+
+Enhanced Resilience: Feil i én tjeneste påvirker ikke de andre
+
+Specialized Teams: Ulike team kan fokusere på ulike tjenester
+
+Regulatory Compliance: Krav til datalagring kan møtes med regionale deployeringer
+
+Implementasjonsnotater:
+
+Authentication service utsteder kortlevde access tokens og lengre refresh tokens
+
+User service vedlikeholder fullstendig profilinformasjon inkludert profesjon og land
+
+Domain services implementerer spesialisert logikk for hver medisinsk profesjon
+
+Event-driven architecture muliggjør sanntidsoppdateringer på tvers av tjenester
+-->
 
 ---
+
+# Authentication Flow Comparison 1
+
+
+```mermaid {scale: 0.7, theme: 'dark'}
+sequenceDiagram
+    participant C as Client
+    participant S1 as Small Scale<br>(Django Auth)
+    participant Sig as Signicat
+    
+    Note over C,S1: Small Scale Flow (1,500-5,000 users)
+    C->>S1: Login Request
+    S1->>Sig: Redirect to Signicat
+    Sig->>C: Authentication UI
+    C->>Sig: Provide Credentials
+    Sig->>S1: Auth Token
+    S1->>S1: Create Django Session
+    S1->>C: Session Cookie
+```
+
+---
+
+# Authentication Flow Comparison2
+
+```mermaid {scale: 0.7, theme: 'dark'}
+sequenceDiagram
+    participant C as Client
+    participant S2 as Medium Scale<br>(Auth Service + Django)
+    participant Sig as Signicat
+    
+    Note over C,S2: Medium Scale Flow (5,000-15,000 users)
+    C->>S2: Login Request
+    S2->>Sig: Redirect to Signicat
+    Sig->>C: Authentication UI
+    C->>Sig: Provide Credentials
+    Sig->>S2: Auth Token
+    S2->>S2: Generate JWT Token
+    S2->>C: JWT Token
+
+```
+
+---
+
+# Authentication Flow Comparison3
+
+```mermaid {scale: 0.6 , theme: 'dark'}
+sequenceDiagram
+    participant C as Client
+    participant S3 as Large Scale<br>(Microservices)
+    participant Sig as Signicat
+    
+    Note over C,S3: Large Scale Flow (15,000+ users)
+    C->>S3: Login Request
+    S3->>Sig: Redirect to Signicat
+    Sig->>C: Authentication UI
+    C->>Sig: Provide Credentials
+    Sig->>S3: Auth Token
+    S3->>S3: Generate Short-Lived Access Token
+    S3->>S3: Generate Refresh Token
+    S3->>C: Access + Refresh Tokens
+```
+
+<!-- 
+
+The fourth diagram shows how the authentication flow evolves across the different scales:
+
+Small Scale: Simple session-based authentication with cookies
+Medium Scale: JWT-based authentication with a separate authentication service
+Large Scale: Sophisticated token management with access and refresh tokens
+
+All three approaches support integration with Signicat for national ID authentication, but with increasing levels of sophistication in token handling and session management.
+
+-->
+
+---
+
 layout: two-cols
 layoutClass: gap-16
+
 ---
 
 # Table of contents
@@ -131,8 +399,10 @@ The title will be inferred from your slide content, or you can override it with 
 <Toc text-sm minDepth="1" maxDepth="2" />
 
 ---
+
 layout: image-right
 image: https://cover.sli.dev
+
 ---
 
 # Code
@@ -144,17 +414,18 @@ Use code snippets and get the highlighting directly, and even types hover!
 // and errors in markdown code blocks
 // More at https://shiki.style/packages/twoslash
 
-import { computed, ref } from 'vue'
+import { computed, ref } from "vue";
 
-const count = ref(0)
-const doubled = computed(() => count.value * 2)
+const count = ref(0);
+const doubled = computed(() => count.value * 2);
 
-doubled.value = 2
+doubled.value = 2;
 ```
 
 <arrow v-click="[4, 5]" x1="350" y1="310" x2="195" y2="334" color="#953" width="2" arrowSize="1" />
 
 <!-- This allow you to embed external code blocks -->
+
 <<< @/snippets/external.ts#snippet
 
 <!-- Footer -->
@@ -185,8 +456,8 @@ Notes can also sync with clicks
 -->
 
 ---
-level: 2
----
+
+## level: 2
 
 # Shiki Magic Move
 
@@ -198,13 +469,13 @@ Add multiple code blocks and wrap them with <code>````md magic-move</code> (four
 ```ts {*|2|*}
 // step 1
 const author = reactive({
-  name: 'John Doe',
+  name: "John Doe",
   books: [
-    'Vue 2 - Advanced Guide',
-    'Vue 3 - Basic Guide',
-    'Vue 4 - The Mystery'
-  ]
-})
+    "Vue 2 - Advanced Guide",
+    "Vue 3 - Basic Guide",
+    "Vue 4 - The Mystery",
+  ],
+});
 ```
 
 ```ts {*|1-2|3-4|3-4,8}
@@ -213,16 +484,16 @@ export default {
   data() {
     return {
       author: {
-        name: 'John Doe',
+        name: "John Doe",
         books: [
-          'Vue 2 - Advanced Guide',
-          'Vue 3 - Basic Guide',
-          'Vue 4 - The Mystery'
-        ]
-      }
-    }
-  }
-}
+          "Vue 2 - Advanced Guide",
+          "Vue 3 - Basic Guide",
+          "Vue 4 - The Mystery",
+        ],
+      },
+    };
+  },
+};
 ```
 
 ```ts
@@ -230,15 +501,15 @@ export default {
 export default {
   data: () => ({
     author: {
-      name: 'John Doe',
+      name: "John Doe",
       books: [
-        'Vue 2 - Advanced Guide',
-        'Vue 3 - Basic Guide',
-        'Vue 4 - The Mystery'
-      ]
-    }
-  })
-}
+        "Vue 2 - Advanced Guide",
+        "Vue 3 - Basic Guide",
+        "Vue 4 - The Mystery",
+      ],
+    },
+  }),
+};
 ```
 
 Non-code blocks are ignored.
@@ -247,13 +518,13 @@ Non-code blocks are ignored.
 <!-- step 4 -->
 <script setup>
 const author = {
-  name: 'John Doe',
+  name: "John Doe",
   books: [
-    'Vue 2 - Advanced Guide',
-    'Vue 3 - Basic Guide',
-    'Vue 4 - The Mystery'
-  ]
-}
+    "Vue 2 - Advanced Guide",
+    "Vue 3 - Basic Guide",
+    "Vue 4 - The Mystery",
+  ],
+};
 </script>
 ```
 ````
@@ -301,8 +572,8 @@ Also, HTML elements are valid:
 -->
 
 ---
-class: px-20
----
+
+## class: px-20
 
 # Themes
 
@@ -459,7 +730,9 @@ LaTeX is supported out-of-box. Powered by [KaTeX](https://katex.org/).
 Inline $\sqrt{3x-1}+(1+x)^2$
 
 Block
-$$ {1|3|all}
+
+$$
+{1|3|all}
 \begin{aligned}
 \nabla \cdot \vec{E} &= \frac{\rho}{\varepsilon_0} \\
 \nabla \cdot \vec{B} &= 0 \\
@@ -549,9 +822,14 @@ database "MySql" {
 Learn more: [Mermaid Diagrams](https://sli.dev/features/mermaid) and [PlantUML Diagrams](https://sli.dev/features/plantuml)
 
 ---
+
 foo: bar
 dragPos:
-  square: 691,32,167,_,-16
+square: 691,32,167,\_,-16
+
+---
+dragPos:
+  square: 0,-422,0,0
 ---
 
 # Draggable Elements
@@ -594,9 +872,12 @@ Double-click on the draggable elements to edit their positions.
 <v-drag-arrow pos="67,452,253,46" two-way op70 />
 
 ---
+
 src: ./pages/imported-slides.md
 hide: false
+
 ---
+
 
 ---
 
@@ -607,26 +888,33 @@ Slidev provides built-in Monaco Editor support.
 Add `{monaco}` to the code block to turn it into an editor:
 
 ```ts {monaco}
-import { ref } from 'vue'
-import { emptyArray } from './external'
+import { ref } from "vue";
+import { emptyArray } from "./external";
 
-const arr = ref(emptyArray(10))
+const arr = ref(emptyArray(10));
 ```
 
 Use `{monaco-run}` to create an editor that can execute the code directly in the slide:
 
 ```ts {monaco-run}
-import { version } from 'vue'
-import { emptyArray, sayHello } from './external'
+import { version } from "vue";
+import { emptyArray, sayHello } from "./external";
 
-sayHello()
-console.log(`vue ${version}`)
-console.log(emptyArray<number>(10).reduce(fib => [...fib, fib.at(-1)! + fib.at(-2)!], [1, 1]))
+sayHello();
+console.log(`vue ${version}`);
+console.log(
+  emptyArray<number>(10).reduce(
+    (fib) => [...fib, fib.at(-1)! + fib.at(-2)!],
+    [1, 1]
+  )
+);
 ```
 
 ---
+
 layout: center
 class: text-center
+
 ---
 
 # Learn More

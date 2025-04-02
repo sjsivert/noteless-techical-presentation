@@ -137,6 +137,30 @@ For mindre brukerbaser er en monolitisk Django-applikasjon effektiv og håndterb
 -->
 
 ---
+layout: center
+---
+
+# Authentication Flow Comparison 1
+
+
+```mermaid {scale: 0.7, theme: 'dark'}
+sequenceDiagram
+    participant C as Client
+    participant S1 as Small Scale<br>(Django Auth)
+    participant Sig as Signicat
+    
+    Note over C,S1: Small Scale Flow (1,500-5,000 users)
+    C->>S1: Login Request
+    S1->>Sig: Redirect to Signicat
+    Sig->>C: Authentication UI
+    C->>Sig: Provide Credentials
+    Sig->>S1: Auth Token
+    S1->>S1: Create Django Session
+    S1->>C: Session Cookie
+```
+
+
+---
 transition: fade-out
 ---
 
@@ -324,17 +348,18 @@ Domain services implementerer spesialisert logikk for hver medisinsk profesjon
 Event-driven architecture muliggjør sanntidsoppdateringer på tvers av tjenester
 -->
 
+
 ---
 layout: center
 ---
+# Authentication Sequence Diagram
 
-# Authentication Flow Comparison 1
-
-
-```mermaid {scale: 0.7, theme: 'dark'}
+```mermaid {scale: 0.3, theme: 'dark'}
 sequenceDiagram
     participant C as Client
     participant S1 as Small Scale<br>(Django Auth)
+    participant S2 as Medium Scale<br>(Auth Service + Django)
+    participant S3 as Large Scale<br>(Microservices)
     participant Sig as Signicat
     
     Note over C,S1: Small Scale Flow (1,500-5,000 users)
@@ -345,19 +370,6 @@ sequenceDiagram
     Sig->>S1: Auth Token
     S1->>S1: Create Django Session
     S1->>C: Session Cookie
-```
-
----
-layout: center
----
-
-# Authentication Flow Comparison2
-
-```mermaid {scale: 0.7, theme: 'dark'}
-sequenceDiagram
-    participant C as Client
-    participant S2 as Medium Scale<br>(Auth Service + Django)
-    participant Sig as Signicat
     
     Note over C,S2: Medium Scale Flow (5,000-15,000 users)
     C->>S2: Login Request
@@ -367,8 +379,19 @@ sequenceDiagram
     Sig->>S2: Auth Token
     S2->>S2: Generate JWT Token
     S2->>C: JWT Token
-
+    
+    Note over C,S3: Large Scale Flow (15,000+ users)
+    C->>S3: Login Request
+    S3->>Sig: Redirect to Signicat
+    Sig->>C: Authentication UI
+    C->>Sig: Provide Credentials
+    Sig->>S3: Auth Token
+    S3->>S3: Generate Short-Lived Access Token
+    S3->>S3: Generate Refresh Token
+    S3->>C: Access + Refresh Tokens
 ```
+
+
 
 ---
 layout: center

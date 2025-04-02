@@ -5,12 +5,11 @@ theme: seriph
 # like them? see https://unsplash.com/collections/94734566/slidev
 background: https://cover.sli.dev
 # some information about your slides (markdown enabled)
-title: Welcome to Slidev
+title: Noteless Technical Case
 info: |
-  ## Slidev Starter Template
-  Presentation slides for developers.
+  ## Noteless Technical Case
+  Sindre Sivertsen
 
-  Learn more at [Sli.dev](https://sli.dev)
 # apply unocss classes to the current slide
 class: text-center
 # https://sli.dev/features/drawing
@@ -20,11 +19,13 @@ drawings:
 transition: slide-left
 # enable MDC Syntax: https://sli.dev/features/mdc
 mdc: true
+
 ---
 
-# Welcome to Slidev
 
-Presentation slides for developers
+# Noteless Technical Case
+
+Sindre Sivertsen
 
 <div @click="$slidev.nav.next" class="mt-12 py-1" hover:bg="white op-10">
   Press Space for next page <carbon:arrow-right />
@@ -45,6 +46,27 @@ The last comment block of each slide will be treated as slide notes. It will be 
 
 ---
 transition: fade-out
+---
+
+# Task 1
+
+Scenario:
+Noteless is expanding internationally and must support various local authentication systems
+(e.g., Norwegian BankID, Danish MitID, Email OTP, and additional local 2FA methods via
+Signicat). The platform also needs to manage segmented user profiles for different
+professions (e.g, GPs, Physiotherapists, Psychologists) and countries (Norway, Denmark,
+Europe).
+Objectives:
+Design a scalable authentication service that cleanly abstracts multiple methods while
+ensuring security, data privacy, and smooth integration with our Django REST Framework
+backend. Incorporate local compliance and language-specific flows to support
+internationalization and future B2B requirements.
+Deliverables:
+- A high-level architecture diagram showing how the authentication service interacts
+with the React/TypeScript frontend and Django backend, how third-party auth
+providers are integrated, and how user segmentation/localization is managed.
+- A brief explanation of your design decisions and
+
 ---
 
 # Small Scale Architecture (1,500-5,000 users)
@@ -303,6 +325,8 @@ Event-driven architecture muliggjør sanntidsoppdateringer på tvers av tjeneste
 -->
 
 ---
+layout: center
+---
 
 # Authentication Flow Comparison 1
 
@@ -323,6 +347,8 @@ sequenceDiagram
     S1->>C: Session Cookie
 ```
 
+---
+layout: center
 ---
 
 # Authentication Flow Comparison2
@@ -345,7 +371,8 @@ sequenceDiagram
 ```
 
 ---
-
+layout: center
+---
 # Authentication Flow Comparison3
 
 ```mermaid {scale: 0.6 , theme: 'dark'}
@@ -379,546 +406,240 @@ All three approaches support integration with Signicat for national ID authentic
 
 ---
 
-layout: two-cols
-layoutClass: gap-16
+# Task 2
+Scenario:
+Noteless wants to build a modular architecture for AI features to be able to quickly iterate and
+implement new models and features. The company currently uses different AI models hosted
+on providers like Azure ML and GCP Vertex. The goal is to be able to quickly implement, test,
+and roll out new models and features for specific user groups.
+Objectives:
+Propose a strategy that allows easy addition or swapping of AI models and services. Also,
+design the solution to support A/B testing, feature flags, and KPI monitoring (for example,
+user feedback and note accuracy).
+Deliverables:
+- An integration diagram that illustrates how our Django/DRF backend will call the
+various AI services, the data flow from raw audio to structured notes, and the control
+points for testing and feature management.
+- A short explanation describing your approach to balan
 
 ---
 
-# Table of contents
+# AI 
 
-You can use the `Toc` component to generate a table of contents for your slides:
-
-```html
-<Toc minDepth="1" maxDepth="1" />
+```mermaid {scale: 0.5 , theme: 'dark'}
+flowchart TD
+    Frontend["Frontend\n(React/TypeScript)"] <--> APIGateway["API Gateway"]
+    APIGateway <--> ReportingService["Reporting Service"]
+    
+    APIGateway <--> DjangoBackend["Django Backend"]
+    APIGateway <--> FeatureManager["Feature Manager Service"]
+    
+    DjangoBackend <--> Database[(Database)]
+    DjangoBackend --> ServiceBus["Service Bus/Message Queue"]
+    
+    ServiceBus --> AIServices["AI Services\n(Orchestration Layer)"]
+    
+    AIServices <--> FeatureManager
+    AIServices <--> ReportingService
+    AIServices <--> AI1["AI 1"]
+    AIServices <--> AI2["AI 2"]
+    AIServices <--> AI3["AI 3"]
+    
+    subgraph "Client Layer"
+        Frontend
+    end
+    
+    subgraph "API Layer"
+        APIGateway
+    end
+    
+    subgraph "Application Layer"
+        DjangoBackend
+        Database
+    end
+    
+    subgraph "Message Layer"
+        ServiceBus
+    end
+    
+    subgraph "AI Processing Layer"
+        AIServices
+        AI1
+        AI2
+        AI3
+    end
+    
+    subgraph "Feature Management"
+        FeatureManager
+    end
+    
+    subgraph "Reporting & Analytics"
+        ReportingService
+    end
+    
+    classDef frontend fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef api fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    classDef app fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef message fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef ai fill:#e0f7fa,stroke:#00bcd4,stroke-width:2px
+    classDef feature fill:#ffebee,stroke:#f44336,stroke-width:2px
+    classDef reporting fill:#f5f5f5,stroke:#607d8b,stroke-width:2px
+    
+    class Frontend frontend
+    class APIGateway api
+    class DjangoBackend,Database app
+    class ServiceBus message
+    class AIServices,AI1,AI2,AI3 ai
+    class FeatureManager feature
+    class ReportingService reporting
 ```
 
-The title will be inferred from your slide content, or you can override it with `title` and `level` in your frontmatter.
-
-::right::
-
-<Toc text-sm minDepth="1" maxDepth="2" />
-
 ---
 
-layout: image-right
-image: https://cover.sli.dev
+# AI flow sequence diagram
 
----
-
-# Code
-
-Use code snippets and get the highlighting directly, and even types hover!
-
-```ts {all|5|7|7-8|10|all} twoslash
-// TwoSlash enables TypeScript hover information
-// and errors in markdown code blocks
-// More at https://shiki.style/packages/twoslash
-
-import { computed, ref } from "vue";
-
-const count = ref(0);
-const doubled = computed(() => count.value * 2);
-
-doubled.value = 2;
-```
-
-<arrow v-click="[4, 5]" x1="350" y1="310" x2="195" y2="334" color="#953" width="2" arrowSize="1" />
-
-<!-- This allow you to embed external code blocks -->
-
-<<< @/snippets/external.ts#snippet
-
-<!-- Footer -->
-
-[Learn more](https://sli.dev/features/line-highlighting)
-
-<!-- Inline style -->
-<style>
-.footnotes-sep {
-  @apply mt-5 opacity-10;
-}
-.footnotes {
-  @apply text-sm opacity-75;
-}
-.footnote-backref {
-  display: none;
-}
-</style>
-
-<!--
-Notes can also sync with clicks
-
-[click] This will be highlighted after the first click
-
-[click] Highlighted with `count = ref(0)`
-
-[click:3] Last click (skip two clicks)
--->
-
----
-
-## level: 2
-
-# Shiki Magic Move
-
-Powered by [shiki-magic-move](https://shiki-magic-move.netlify.app/), Slidev supports animations across multiple code snippets.
-
-Add multiple code blocks and wrap them with <code>````md magic-move</code> (four backticks) to enable the magic move. For example:
-
-````md magic-move {lines: true}
-```ts {*|2|*}
-// step 1
-const author = reactive({
-  name: "John Doe",
-  books: [
-    "Vue 2 - Advanced Guide",
-    "Vue 3 - Basic Guide",
-    "Vue 4 - The Mystery",
-  ],
-});
-```
-
-```ts {*|1-2|3-4|3-4,8}
-// step 2
-export default {
-  data() {
-    return {
-      author: {
-        name: "John Doe",
-        books: [
-          "Vue 2 - Advanced Guide",
-          "Vue 3 - Basic Guide",
-          "Vue 4 - The Mystery",
-        ],
-      },
-    };
-  },
-};
-```
-
-```ts
-// step 3
-export default {
-  data: () => ({
-    author: {
-      name: "John Doe",
-      books: [
-        "Vue 2 - Advanced Guide",
-        "Vue 3 - Basic Guide",
-        "Vue 4 - The Mystery",
-      ],
-    },
-  }),
-};
-```
-
-Non-code blocks are ignored.
-
-```vue
-<!-- step 4 -->
-<script setup>
-const author = {
-  name: "John Doe",
-  books: [
-    "Vue 2 - Advanced Guide",
-    "Vue 3 - Basic Guide",
-    "Vue 4 - The Mystery",
-  ],
-};
-</script>
-```
-````
-
----
-
-# Components
-
-<div grid="~ cols-2 gap-4">
-<div>
-
-You can use Vue components directly inside your slides.
-
-We have provided a few built-in components like `<Tweet/>` and `<Youtube/>` that you can use directly. And adding your custom components is also super easy.
-
-```html
-<Counter :count="10" />
-```
-
-<!-- ./components/Counter.vue -->
-<Counter :count="10" m="t-4" />
-
-Check out [the guides](https://sli.dev/builtin/components.html) for more.
-
-</div>
-<div>
-
-```html
-<Tweet id="1390115482657726468" />
-```
-
-<Tweet id="1390115482657726468" scale="0.65" />
-
-</div>
-</div>
-
-<!--
-Presenter note with **bold**, *italic*, and ~~striked~~ text.
-
-Also, HTML elements are valid:
-<div class="flex w-full">
-  <span style="flex-grow: 1;">Left content</span>
-  <span>Right content</span>
-</div>
--->
-
----
-
-## class: px-20
-
-# Themes
-
-Slidev comes with powerful theming support. Themes can provide styles, layouts, components, or even configurations for tools. Switching between themes by just **one edit** in your frontmatter:
-
-<div grid="~ cols-2 gap-2" m="t-2">
-
-```yaml
----
-theme: default
----
-```
-
-```yaml
----
-theme: seriph
----
-```
-
-<img border="rounded" src="https://github.com/slidevjs/themes/blob/main/screenshots/theme-default/01.png?raw=true" alt="">
-
-<img border="rounded" src="https://github.com/slidevjs/themes/blob/main/screenshots/theme-seriph/01.png?raw=true" alt="">
-
-</div>
-
-Read more about [How to use a theme](https://sli.dev/guide/theme-addon#use-theme) and
-check out the [Awesome Themes Gallery](https://sli.dev/resources/theme-gallery).
-
----
-
-# Clicks Animations
-
-You can add `v-click` to elements to add a click animation.
-
-<div v-click>
-
-This shows up when you click the slide:
-
-```html
-<div v-click>This shows up when you click the slide.</div>
-```
-
-</div>
-
-<br>
-
-<v-click>
-
-The <span v-mark.red="3"><code>v-mark</code> directive</span>
-also allows you to add
-<span v-mark.circle.orange="4">inline marks</span>
-, powered by [Rough Notation](https://roughnotation.com/):
-
-```html
-<span v-mark.underline.orange>inline markers</span>
-```
-
-</v-click>
-
-<div mt-20 v-click>
-
-[Learn more](https://sli.dev/guide/animations#click-animation)
-
-</div>
-
----
-
-# Motions
-
-Motion animations are powered by [@vueuse/motion](https://motion.vueuse.org/), triggered by `v-motion` directive.
-
-```html
-<div
-  v-motion
-  :initial="{ x: -80 }"
-  :enter="{ x: 0 }"
-  :click-3="{ x: 80 }"
-  :leave="{ x: 1000 }"
->
-  Slidev
-</div>
-```
-
-<div class="w-60 relative">
-  <div class="relative w-40 h-40">
-    <img
-      v-motion
-      :initial="{ x: 800, y: -100, scale: 1.5, rotate: -50 }"
-      :enter="final"
-      class="absolute inset-0"
-      src="https://sli.dev/logo-square.png"
-      alt=""
-    />
-    <img
-      v-motion
-      :initial="{ y: 500, x: -100, scale: 2 }"
-      :enter="final"
-      class="absolute inset-0"
-      src="https://sli.dev/logo-circle.png"
-      alt=""
-    />
-    <img
-      v-motion
-      :initial="{ x: 600, y: 400, scale: 2, rotate: 100 }"
-      :enter="final"
-      class="absolute inset-0"
-      src="https://sli.dev/logo-triangle.png"
-      alt=""
-    />
-  </div>
-
-  <div
-    class="text-5xl absolute top-14 left-40 text-[#2B90B6] -z-1"
-    v-motion
-    :initial="{ x: -80, opacity: 0}"
-    :enter="{ x: 0, opacity: 1, transition: { delay: 2000, duration: 1000 } }">
-    Slidev
-  </div>
-</div>
-
-<!-- vue script setup scripts can be directly used in markdown, and will only affects current page -->
-<script setup lang="ts">
-const final = {
-  x: 0,
-  y: 0,
-  rotate: 0,
-  scale: 1,
-  transition: {
-    type: 'spring',
-    damping: 10,
-    stiffness: 20,
-    mass: 2
-  }
-}
-</script>
-
-<div
-  v-motion
-  :initial="{ x:35, y: 30, opacity: 0}"
-  :enter="{ y: 0, opacity: 1, transition: { delay: 3500 } }">
-
-[Learn more](https://sli.dev/guide/animations.html#motion)
-
-</div>
-
----
-
-# LaTeX
-
-LaTeX is supported out-of-box. Powered by [KaTeX](https://katex.org/).
-
-<div h-3 />
-
-Inline $\sqrt{3x-1}+(1+x)^2$
-
-Block
-
-$$
-{1|3|all}
-\begin{aligned}
-\nabla \cdot \vec{E} &= \frac{\rho}{\varepsilon_0} \\
-\nabla \cdot \vec{B} &= 0 \\
-\nabla \times \vec{E} &= -\frac{\partial\vec{B}}{\partial t} \\
-\nabla \times \vec{B} &= \mu_0\vec{J} + \mu_0\varepsilon_0\frac{\partial\vec{E}}{\partial t}
-\end{aligned}
-$$
-
-[Learn more](https://sli.dev/features/latex)
-
----
-
-# Diagrams
-
-You can create diagrams / graphs from textual descriptions, directly in your Markdown.
-
-<div class="grid grid-cols-4 gap-5 pt-4 -mb-6">
-
-```mermaid {scale: 0.5, alt: 'A simple sequence diagram'}
+```mermaid {scale: 0.23}
 sequenceDiagram
-    Alice->John: Hello John, how are you?
-    Note over Alice,John: A typical interaction
+    participant F as Frontend
+    participant D as Django Backend
+    participant SB as Service Bus
+    participant AIS as AI Services
+    participant FM as Feature Manager
+    participant AI1 as AI Service 1
+    participant AI2 as AI Service 2
+    participant AI3 as AI Service 3
+    participant RS as Reporting Service
+    participant WS as WebSocket Channel
+
+    F->>+D: POST /transcribe with audio file
+    D->>D: Generate request_id
+    D->>+SB: Put transcription request message
+    Note over D,SB: {request_id, audio_file, metadata}
+    D->>-F: 202 Accepted with WebSocket info
+    Note over D,F: {request_id, websocket_channel}
+    
+    F->>WS: Connect to WebSocket channel
+    Note over F,WS: Subscribe to updates for request_id
+
+    SB->>+AIS: Deliver transcription request message
+    AIS->>+FM: Get feature config for user/request
+    FM->>-AIS: Return AI service selection
+    
+    alt AI Service 1 Selected
+        AIS->>+AI1: Send transcription request
+        AI1->>-AIS: Return transcription result
+    else AI Service 2 Selected
+        AIS->>+AI2: Send transcription request
+        AI2->>-AIS: Return transcription result
+    else AI Service 3 Selected
+        AIS->>+AI3: Send transcription request
+        AI3->>-AIS: Return transcription result
+    end
+    
+    AIS->>+RS: Report tokens and cost
+    Note over AIS,RS: {request_id, model, tokens, cost}
+    RS->>-AIS: Acknowledge
+    
+    AIS->>-SB: Put completed transcription message
+    Note over AIS,SB: {request_id, transcription_result}
+    
+    SB->>+D: Deliver completed transcription message
+    D->>+WS: Publish result to WebSocket channel
+    Note over D,WS: {request_id, transcription_result}
+    WS->>-F: Deliver transcription result
+    
+    F->>+RS: Report user KPIs
+    Note over F,RS: {request_id, satisfaction_score, edit_count}
+    RS->>-F: Acknowledge
+
 ```
 
-```mermaid {theme: 'neutral', scale: 0.8}
-graph TD
-B[Text] --> C{Decision}
-C -->|One| D[Result 1]
-C -->|Two| E[Result 2]
-```
+
+---
+layout: center
+
+---
+
+# Multi armed bandit Flowchart
 
 ```mermaid
-mindmap
-  root((mindmap))
-    Origins
-      Long history
-      ::icon(fa fa-book)
-      Popularisation
-        British popular psychology author Tony Buzan
-    Research
-      On effectiveness<br/>and features
-      On Automatic creation
-        Uses
-            Creative techniques
-            Strategic planning
-            Argument mapping
-    Tools
-      Pen and paper
-      Mermaid
-```
-
-```plantuml {scale: 0.7}
-@startuml
-
-package "Some Group" {
-  HTTP - [First Component]
-  [Another Component]
-}
-
-node "Other Groups" {
-  FTP - [Second Component]
-  [First Component] --> FTP
-}
-
-cloud {
-  [Example 1]
-}
-
-database "MySql" {
-  folder "This is my folder" {
-    [Folder 3]
-  }
-  frame "Foo" {
-    [Frame 4]
-  }
-}
-
-[Another Component] --> [Example 1]
-[Example 1] --> [Folder 3]
-[Folder 3] --> [Frame 4]
-
-@enduml
-```
-
-</div>
-
-Learn more: [Mermaid Diagrams](https://sli.dev/features/mermaid) and [PlantUML Diagrams](https://sli.dev/features/plantuml)
-
----
-
-foo: bar
-dragPos:
-square: 691,32,167,\_,-16
-
----
-dragPos:
-  square: 0,-422,0,0
----
-
-# Draggable Elements
-
-Double-click on the draggable elements to edit their positions.
-
-<br>
-
-###### Directive Usage
-
-```md
-<img v-drag="'square'" src="https://sli.dev/logo.png">
-```
-
-<br>
-
-###### Component Usage
-
-```md
-<v-drag text-3xl>
-  <div class="i-carbon:arrow-up" />
-  Use the `v-drag` component to have a draggable container!
-</v-drag>
-```
-
-<v-drag pos="663,206,261,_,-15">
-  <div text-center text-3xl border border-main rounded>
-    Double-click me!
-  </div>
-</v-drag>
-
-<img v-drag="'square'" src="https://sli.dev/logo.png">
-
-###### Draggable Arrow
-
-```md
-<v-drag-arrow two-way />
-```
-
-<v-drag-arrow pos="67,452,253,46" two-way op70 />
-
----
-
-src: ./pages/imported-slides.md
-hide: false
-
----
-
-
----
-
-# Monaco Editor
-
-Slidev provides built-in Monaco Editor support.
-
-Add `{monaco}` to the code block to turn it into an editor:
-
-```ts {monaco}
-import { ref } from "vue";
-import { emptyArray } from "./external";
-
-const arr = ref(emptyArray(10));
-```
-
-Use `{monaco-run}` to create an editor that can execute the code directly in the slide:
-
-```ts {monaco-run}
-import { version } from "vue";
-import { emptyArray, sayHello } from "./external";
-
-sayHello();
-console.log(`vue ${version}`);
-console.log(
-  emptyArray<number>(10).reduce(
-    (fib) => [...fib, fib.at(-1)! + fib.at(-2)!],
-    [1, 1]
-  )
-);
+flowchart TB
+    MainServiceBus["Main Service Bus"] <--> AIServices["AI Services\n(Orchestration Layer)"]
+    
+    AIServices <--> FeatureManager["Feature Manager Service"]
+    AIServices <--> ReportingService["Reporting Service"]
+    
+    AIServices <--> AIServiceBus["AI Service Bus"]
+    
+    AIServiceBus <--> AI1["AI Microservice 1\n(e.g., Azure Transcription)"]
+    AIServiceBus <--> AI2["AI Microservice 2\n(e.g., GCP Medical NER)"]
+    AIServiceBus <--> AI3["AI Microservice 3\n(e.g., OpenAI Note Structuring)"]
+    
+    subgraph "External Systems"
+        FeatureManager
+        ReportingService
+    end
+    
+    subgraph "AI Processing Layer"
+        AIServices
+        AIServiceBus
+        AI1
+        AI2
+        AI3
+    end
+    
+    classDef orchestration fill:#e0f7fa,stroke:#00bcd4,stroke-width:2px
+    classDef bus fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef microservice fill:#bbdefb,stroke:#1976d2,stroke-width:2px
+    classDef external fill:#ffebee,stroke:#f44336,stroke-width:2px
+    
+    class AIServices orchestration
+    class AIServiceBus,MainServiceBus bus
+    class AI1,AI2,AI3 microservice
+    class FeatureManager,ReportingService external
 ```
 
 ---
 
-layout: center
-class: text-center
+# Multi armed sequence diagram
 
----
+```mermaid {scale: 0.35}
+sequenceDiagram
+    participant AIO as AI Orchestrator
+    participant SB as Service Bus
+    participant RS as Reporting Service
+    participant AI1 as AI Service 1
+    participant AI2 as AI Service 2
+    participant AI3 as AI Service 3
 
-# Learn More
+    AIO->>RS: Get AI service statistics
+    RS->>AIO: Return usage statistics
+    Note over RS,AIO: Times shown, times chosen,<br/>success rate, avg cost
 
-[Documentation](https://sli.dev) · [GitHub](https://github.com/slidevjs/slidev) · [Showcases](https://sli.dev/resources/showcases)
-
-<PoweredBySlidev mt-10 />
+    AIO->>SB: Publish "need: transcribe_notes"
+    Note over AIO,SB: {request_id, audio_data}
+    
+    SB->>AI1: Deliver request
+    SB->>AI2: Deliver request
+    SB->>AI3: Deliver request
+    
+    AI1->>SB: Publish capability response
+    AI2->>SB: Publish capability response
+    AI3->>SB: Publish capability response
+    
+    SB->>AIO: Deliver all responses
+    
+    AIO->>AIO: Calculate scores and select provider
+    Note over AIO: Based on capabilities and<br/>historical statistics
+    
+    AIO->>SB: Publish task assignment
+    Note over AIO,SB: {selected_provider: "AI2"}
+    
+    SB->>AI2: Deliver task assignment
+    
+    AI2->>SB: Publish transcription result
+    
+    SB->>AIO: Deliver result
+    
+    AIO->>RS: Report selection and usage
+```
